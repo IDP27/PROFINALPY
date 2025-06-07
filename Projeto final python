@@ -1,0 +1,185 @@
+from datetime import datetime
+
+class BancoDadosFicticio:
+    def __init__(self):
+        self.produtos = {}
+        self.vendas = {}
+        self.contador_id_produto = 1
+        self.contador_id_venda = 1
+
+
+class SistemaEstoque:
+    def __init__(self):
+        self.db = BancoDadosFicticio()
+
+    def cadastrar_produto(self):
+        print("\n--- Cadastrar Novo Produto ---")
+        nome = input("Nome do produto: ")
+
+        while True:
+            try:
+                preco = float(input("Preço do produto: R$ "))
+                if preco < 0:
+                    raise ValueError
+                break
+            except ValueError:
+                print("Preço inválido. Digite um número positivo.")
+
+        while True:
+            try:
+                quantidade = int(input("Quantidade em estoque: "))
+                if quantidade < 0:
+                    raise ValueError
+                break
+            except ValueError:
+                print("Quantidade inválida. Digite um número inteiro positivo.")
+
+        produto = {
+            'id': self.db.contador_id_produto,
+            'nome': nome,
+            'preco': preco,
+            'quantidade': quantidade
+        }
+
+        self.db.produtos[self.db.contador_id_produto] = produto
+        print(f"Produto '{nome}' cadastrado com sucesso! ID: {self.db.contador_id_produto}")
+        self.db.contador_id_produto += 1
+
+    def listar_produtos(self):
+        print("\n--- Lista de Produtos ---")
+        if not self.db.produtos:
+            print("Nenhum produto cadastrado.")
+            return
+
+        for id_produto, produto in self.db.produtos.items():
+            print(f"ID: {id_produto} | Nome: {produto['nome']} | Preço: R${produto['preco']:.2f} | Quantidade: {produto['quantidade']}")
+
+    def atualizar_produto(self):
+        print("\n--- Atualizar Produto ---")
+        self.listar_produtos()
+
+        try:
+            id_produto = int(input("\nDigite o ID do produto que deseja atualizar: "))
+            if id_produto not in self.db.produtos:
+                print("Produto não encontrado!")
+                return
+
+            produto = self.db.produtos[id_produto]
+            print(f"\nEditando produto: {produto['nome']}")
+
+            novo_nome = input(f"Nome atual ({produto['nome']}): ") or produto['nome']
+            novo_preco = input(f"Preço atual (R${produto['preco']:.2f}): ") or produto['preco']
+            nova_quantidade = input(f"Quantidade atual ({produto['quantidade']}): ") or produto['quantidade']
+
+            produto['nome'] = novo_nome
+            produto['preco'] = float(novo_preco)
+            produto['quantidade'] = int(nova_quantidade)
+
+            print("Produto atualizado com sucesso!")
+
+        except ValueError:
+            print("Entrada inválida. Use números para ID, preço e quantidade.")
+
+    def remover_produto(self):
+        print("\n--- Remover Produto ---")
+        self.listar_produtos()
+
+        try:
+            id_produto = int(input("\nDigite o ID do produto que deseja remover: "))
+            if id_produto not in self.db.produtos:
+                print("Produto não encontrado!")
+                return
+
+            produto = self.db.produtos.pop(id_produto)
+            print(f"Produto '{produto['nome']}' removido com sucesso!")
+
+        except ValueError:
+            print("ID inválido. Digite um número.")
+
+    def registrar_venda(self):
+        print("\n--- Registrar Venda ---")
+        self.listar_produtos()
+
+        try:
+            id_produto = int(input("\nDigite o ID do produto vendido: "))
+            if id_produto not in self.db.produtos:
+                print("Produto não encontrado!")
+                return
+
+            quantidade_vendida = int(input("Quantidade vendida: "))
+            produto = self.db.produtos[id_produto]
+
+            if quantidade_vendida > produto['quantidade']:
+                print("Quantidade em estoque insuficiente!")
+                return
+
+            
+            produto['quantidade'] -= quantidade_vendida
+
+            
+            venda = {
+                'id': self.db.contador_id_venda,
+                'id_produto': id_produto,
+                'nome_produto': produto['nome'],
+                'quantidade': quantidade_vendida,
+                'preco_unitario': produto['preco'],
+                'total': quantidade_vendida * produto['preco'],
+                'data': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            }
+
+            self.db.vendas[self.db.contador_id_venda] = venda
+            print(f"Venda registrada com sucesso! ID Venda: {self.db.contador_id_venda}")
+            print(f"Total da venda: R$ {venda['total']:.2f}")
+            self.db.contador_id_venda += 1
+
+        except ValueError:
+            print("Entrada inválida. Use números para ID e quantidade.")
+
+    def listar_vendas(self):
+        print("\n--- Histórico de Vendas ---")
+        if not self.db.vendas:
+            print("Nenhuma venda registrada.")
+            return
+
+        for id_venda, venda in self.db.vendas.items():
+            print(f"ID Venda: {id_venda} | Data: {venda['data']}")
+            print(f"Produto: {venda['nome_produto']} (ID: {venda['id_produto']})")
+            print(f"Quantidade: {venda['quantidade']} x R$ {venda['preco_unitario']:.2f} = R$ {venda['total']:.2f}")
+            print("-" * 40)
+
+    def menu(self):
+        while True:
+            print("\n=== SISTEMA DE GERENCIAMENTO DE ESTOQUE ===")
+            print("1. Cadastrar novo produto")
+            print("2. Listar produtos")
+            print("3. Atualizar produto")
+            print("4. Remover produto")
+            print("5. Registrar venda")
+            print("6. Listar vendas")
+            print("7. Sair")
+
+            opcao = input("Escolha uma opção: ")
+
+            if opcao == '1':
+                self.cadastrar_produto()
+            elif opcao == '2':
+                self.listar_produtos()
+            elif opcao == '3':
+                self.atualizar_produto()
+            elif opcao == '4':
+                self.remover_produto()
+            elif opcao == '5':
+                self.registrar_venda()
+            elif opcao == '6':
+                self.listar_vendas()
+            elif opcao == '7':
+                print("Saindo do sistema...")
+                break
+            else:
+                print("Opção inválida. Tente novamente.")
+
+
+
+if __name__ == "__main__":
+    sistema = SistemaEstoque()
+    sistema.menu()
